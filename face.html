@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
+    <title>Simple Face with Dad Joke</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        canvas {
+            background-color: black;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .joke {
+            position: absolute;
+            top: 10%;
+            right: 10%;
+            max-width: 30%;
+            text-align: center;
+            color: black;
+            font-family: sans-serif;
+            font-size: 1.1rem;
+            padding: 12px;
+            background: white;
+            border-radius: 12px;
+            display: none;
+        }
+
+        .joke::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -12px;
+            transform: translateY(-50%);
+            border-width: 10px 12px 10px 0;
+            border-style: solid;
+            border-color: transparent white transparent transparent;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="faceCanvas"></canvas>
+    <div class="controls">
+        <button onclick="setExpression('neutral')">Neutral</button>
+        <button onclick="setExpression('happy')">Happy</button>
+        <button onclick="setExpression('sad')">Sad</button>
+        <button onclick="setExpression('angry')">Angry</button>
+        <button onclick="setExpression('surprised')">Surprised</button>
+        <button onclick="setExpression('shy')">Shy</button>
+        <button onclick="setExpression('annoyed')">Annoyed</button>
+        <button onclick="showDadJoke()">Dad Joke</button>
+    </div>
+    <div id="jokeBox" class="joke"></div>
+
+    <script>
+        const canvas = document.getElementById("faceCanvas");
+        const ctx = canvas.getContext("2d");
+        const jokeBox = document.getElementById("jokeBox");
+        const dadJokes = [
+            "I'm reading a book on anti-gravity. It's impossible to put down!",
+            "Did you hear about the restaurant on the moon? Great food, no atmosphere.",
+            "Why don't skeletons fight each other? They don't have the guts.",
+            "I used to play piano by ear, but now I use my hands.",
+            "I would tell you a joke about construction, but I'm still working on it.",
+            "Why did the scarecrow win an award? Because he was outstanding in his field.",
+            "I used to hate facial hair...but then it grew on me.",
+            "Why did the math book look sad? Because it had too many problems.",
+            "I'm on a seafood diet. I see food and I eat it.",
+            "What do you call fake spaghetti? An impasta!",
+            "What do you call cheese that isn't yours? Nacho cheese.",
+            "Why did the tomato blush? Because it saw the salad dressing.",
+            "How do you organize a space party? You planet.",
+            "Why don't eggs tell jokes? They'd crack each other up.",
+            "What do you call a fish wearing a bowtie? Sofishticated.",
+            "Why did the bicycle fall over? Because it was two-tired.",
+            "I would avoid the sushi if I was you. It’s a little fishy.",
+            "Why don't scientists trust atoms? Because they make up everything.",
+            "Want to hear a joke about paper? Never mind, it's tearable.",
+            "I’m reading a book about teleportation. It’s bound to get me somewhere.",
+            "I used to work in a shoe recycling shop. It was sole destroying.",
+            "I’m so good at sleeping, I can do it with my eyes closed.",
+            "I only know 25 letters of the alphabet. I don't know y.",
+            "When does a joke become a dad joke? When it becomes apparent.",
+            "I made a pencil with two erasers. It was pointless.",
+            "I used to be addicted to soap, but I'm clean now.",
+            "Can February March? No, but April May!",
+            "How does a penguin build its house? Igloos it together.",
+            "Why don't crabs give to charity? Because they’re shellfish.",
+            "What do you call a bear with no teeth? A gummy bear."
+        ];
+        let expression = "neutral";
+        let eyeOffset = 0;
+        let blink = false;
+        let browOffset = 0;
+        let mouthOffset = 0;
+        let jokeTimeout;
+        let isLaughing = false;
+        let isCrying = false;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function drawFace() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            const fw = canvas.width * 0.75;
+            const fh = canvas.height * 0.9;
+
+            // Face shape
+            ctx.fillStyle = "#1a1a1a";
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, fw / 2, fh / 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Features
+            drawEyes(cx, cy, fw);
+            drawEyebrows(cx, cy, fw);
+            drawMouth(cx, cy, fw);
+            if (isCrying) drawTears(cx, cy, fw);
+        }
+
+        function drawEyes(cx, cy, fw) {
+            ctx.fillStyle = "#007BFF";
+            const xOff = fw * 0.2;
+            const y = cy - fw * 0.08 + eyeOffset;
+            const w = fw * (isLaughing ? 0.15 : 0.1);
+            const h = blink ? fw * 0.015 : fw * 0.07;
+            [cx - xOff, cx + xOff].forEach(x => {
+                ctx.beginPath();
+                ctx.ellipse(x, y, w, h, 0, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function drawEyebrows(cx, cy, fw) {
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = fw * 0.01;
+            const browY = cy - fw * 0.15 + browOffset;
+            const xOff = fw * 0.18;
+            ctx.beginPath();
+            if (isLaughing) {
+                ctx.moveTo(cx - xOff, browY - 20);
+                ctx.lineTo(cx - xOff + fw * 0.12, browY - 30);
+                ctx.moveTo(cx + xOff, browY - 30);
+                ctx.lineTo(cx + xOff + fw * 0.12, browY - 20);
+            } else {
+                // existing expressions
+                if (expression === "sad") {
+                    ctx.moveTo(cx - xOff, browY + 10);
+                    ctx.lineTo(cx - xOff + fw * 0.12, browY - 10);
+                    ctx.moveTo(cx + xOff, browY - 10);
+                    ctx.lineTo(cx + xOff + fw * 0.12, browY + 10);
+                } else if (expression === "angry") {
+                    ctx.moveTo(cx - xOff, browY - 10);
+                    ctx.lineTo(cx - xOff + fw * 0.12, browY + 10);
+                    ctx.moveTo(cx + xOff, browY + 10);
+                    ctx.lineTo(cx + xOff + fw * 0.12, browY - 10);
+                } else if (expression === "shy") {
+                    ctx.moveTo(cx - xOff, browY);
+                    ctx.lineTo(cx - xOff + fw * 0.12, browY);
+                    ctx.moveTo(cx + xOff, browY);
+                    ctx.lineTo(cx + xOff + fw * 0.12, browY);
+                } else if (expression === "annoyed") {
+                    ctx.moveTo(cx - xOff, browY - 5);
+                    ctx.lineTo(cx - xOff + fw * 0.12, browY);
+                    ctx.moveTo(cx + xOff, browY + 5);
+                    ctx.lineTo(cx + xOff + fw * 0.12, browY);
+                }
+            }
+            ctx.stroke();
+        }
+
+        function drawMouth(cx, cy, fw) {
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = fw * (isLaughing ? 0.015 : 0.01);
+            const y = cy + fw * 0.05 + mouthOffset;
+            ctx.beginPath();
+            if (isLaughing) {
+                ctx.arc(cx, y, fw * 0.2, 0, Math.PI, false);
+                ctx.moveTo(cx - fw * 0.1, y - fw * 0.06);
+                ctx.arc(cx, y - fw * 0.06, fw * 0.1, 0, Math.PI, false);
+            } else if (expression === "neutral") {
+                ctx.arc(cx, y, fw * 0.1, 0.1 * Math.PI, 0.9 * Math.PI, false);
+            } else if (expression === "happy") {
+                ctx.arc(cx, y, fw * 0.15, 0, Math.PI, false);
+                ctx.moveTo(cx - fw * 0.15, y);
+                ctx.lineTo(cx + fw * 0.15, y);
+            } else if (expression === "angry" || expression === "annoyed") {
+                ctx.arc(cx, y + fw * 0.15, fw * 0.15, Math.PI, 2 * Math.PI, false);
+            } else if (expression === "sad" || expression === "shy") {
+                ctx.moveTo(cx - fw * 0.08, y + 10);
+                ctx.lineTo(cx, y - 10);
+                ctx.lineTo(cx + fw * 0.08, y + 10);
+            } else if (expression === "surprised") {
+                ctx.arc(cx, y, fw * 0.05, 0, Math.PI * 2, false);
+            }
+            ctx.stroke();
+        }
+
+        function drawTears(cx, cy, fw) {
+            ctx.fillStyle = '#00BFFF';
+            const xOff = fw * 0.2;
+            const eyeY = cy - fw * 0.08 + eyeOffset;
+            const tw = fw * 0.03;
+            const th = fw * 0.05;
+            [cx - xOff, cx + xOff].forEach(x => {
+                ctx.beginPath();
+                ctx.ellipse(x, eyeY + fw * 0.1, tw, th, 0, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function setExpression(exp) {
+            expression = exp;
+            drawFace();
+        }
+
+        function showDadJoke() {
+            clearTimeout(jokeTimeout);
+            const joke = dadJokes[Math.floor(Math.random() * dadJokes.length)];
+            jokeBox.textContent = joke;
+            jokeBox.style.display = 'block';
+            // choose crying-of-joy occasionally
+            isCrying = Math.random() < 0.3;
+            isLaughing = true;
+            drawFace();
+            if ('speechSynthesis' in window) {
+                const utt = new SpeechSynthesisUtterance(joke);
+                window.speechSynthesis.speak(utt);
+            }
+            jokeTimeout = setTimeout(() => {
+                jokeBox.style.display = 'none';
+                isLaughing = false;
+                isCrying = false;
+                expression = 'neutral';
+                drawFace();
+            }, 10000);
+        }
+
+        function animate() {
+            const speed = isLaughing ? 200 : 500;
+            const amp = isLaughing ? 15 : 5;
+            eyeOffset = Math.sin(Date.now() / speed) * amp;
+            browOffset = eyeOffset;
+            mouthOffset = eyeOffset;
+            if (Math.random() < 0.002) blink = true;
+            setTimeout(() => (blink = false), isLaughing ? 100 : 200);
+            drawFace();
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+        animate();
+    </script>
+</body>
+
+</html>
