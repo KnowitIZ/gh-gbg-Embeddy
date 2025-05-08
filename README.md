@@ -1,8 +1,7 @@
 # Embeddy – The Ultimate Interactive Office Mascot
 
-Embeddy is more than just a Raspberry Pi-powered gadget—it’s our friendly office mascot, collaborative coworker, and interactive learning hub designed to bring joy, connectivity, and innovation to our workspace. With Embeddy, you get personalized interactions, fun learning experiences, and sustainability insights—all delivered with a cheerful Gothenburg charm!
-
-Embeddy knows you, connects you with colleagues across offices, and helps your skills and friendships grow.
+Embeddy isn't just a Raspberry Pi gadget—it's your friendly coworker and learning hub, bringing joy, **connectivity** and innovation, and sustainability insights to our workspace.
+Embeddy knows you, helps you connect with colleagues across offices, and encourages personal growth through personalized interactions—all delivered with cheerful Gothenburg charm.
 
 ## ✨ Features
 
@@ -33,8 +32,4 @@ Embeddy knows you, connects you with colleagues across offices, and helps your s
 
 ### Installation
 
-```bash
-git clone https://github.com/your-org/embeddy.git
-cd embeddy
-pip install -r requirements.txt
-```
+Talk to Jonas änna
