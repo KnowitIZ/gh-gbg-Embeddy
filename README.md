@@ -1,55 +1,40 @@
-# Embeddy – The Ultimate Office Mascot
+# Embeddy – The Ultimate Interactive Office Mascot
 
-Embeddy isn't just a Raspberry Pi-powered interactive companion—it's our office mascot, coworker, and friend, bringing fun, learning, and sustainability to our workspace!
-Embeddy connects our offices, fosters fun competition, and promotes learning and sustainability in a personalized way!
+Embeddy is more than just a Raspberry Pi-powered gadget—it’s our friendly office mascot, collaborative coworker, and interactive learning hub designed to bring joy, connectivity, and innovation to our workspace. With Embeddy, you get personalized interactions, fun learning experiences, and sustainability insights—all delivered with a cheerful Gothenburg charm!
 
-Embeddy knows you, connects you, and helps you grow—always with a friendly Gothenburg twist!
+Embeddy knows you, connects you with colleagues across offices, and helps your skills and friendships grow.
 
 ## ✨ Features
 
 ### 🤗 Personalized Connection
 
-- **Local LLM:** Embeddy learns about team members through our resumes, for personalized interactions with conversational memory.
-
-- **Mood & Attire Detection:** Brightens your day by sensing when you need extra encouragement or cheering up.
-
-- **Gothenburg Accent:** Speaks in a friendly, authentic Gothenburg-English.
+- **Local LLM:** Learns about team members through our resumes for personalized conversations and retains conversational context. Also keeps track of events and shares fun memories.
+- **Mood & Attire Detection:** Cheers you up with personalized encouragement, especially on tough days.
+- **Gothenburg Accent:** Engages everyone in friendly, authentic Gothenburg-English.
 
 ### 🌍 Sustainability Ambassador
 
-- **Daily Sustainability Facts:** Shares engaging and informative sustainability facts every day between 9 and 16.
+- **Daily Sustainability Facts:** Shares engaging sustainability facts every day between 9:00 and 16:00.
 
-### 🍃 Sustainability Ambassador
+### 🤖 Interactive Tech & Fun Learning Hub
 
-- **Eco-Friendly Quotes & Facts:** Shares a random sustaibility fact between 9-16 every day, like be real.
+- **Sensors & Robotics:** Equipped with advanced sensors like LIDAR, cameras, and custom 3D-printed components, Embeddy facilitates workshops on SLAM, sensor integration, PID control, and embedded systems.
+- **Wave Gesture Control:** Start conversations or jokes simply by waving.
+- **Selfie Station:** Helps capture and store memorable office moments.
+- **Mini-Games & Developer Challenges:** Embedded programming puzzles to test and develop your coding skills.
+- **Decorative LED Animations:** Expresses Embeddy’s current mood and celebrates special events with vibrant LEDs.
 
-### 🤖 Interactive Tech & Fun
+### 📅 Connecting Offices
 
-- **Wave Gesture Control:** Interact hands-free, starting conversations or jokes simply by waving.
-- **Selfie Station:** Embeddy are there when your colleges want to snap a selfie saving them for later.
-- **Mini-Games & Developer Challenges:** Press the "Game" button for embedded programming puzzles—fun ways to sharpen your coding skills!
-- **Decorative LED Animations:** LEDs that reflect Embeddy’s mood, excitement, or special occasions.
+- **Mobility & Interaction:** With wheels and motors, Embeddy navigates offices, creating engaging robotics challenges between locations.
+- **Office Calls:** Quickly dial video calls for spontaneous conversations, strengthening bonds between teams.
 
-### 📅 Central Office Hub
+## ⚙️ Installation & Usage
 
-- **Event Information & Memories:** Answers questions about upcoming events, retrieves event details, and even shares memorable photos from past gatherings (e.g., Christmas parties).
-- **Connecting Offices:** Enables quick and easy communication between different office locations, enhancing team spirit and collaboration across the company.
+### Installation
 
-## 🚀 Learning Hub
-
-Encourages team collaboration to continuously develop and improve Embeddy’s capabilities.
-
-### ⚙️ Robotics & Sensors
-
-- **Wheels & Motors:** Equipped with motors and wheels, making Embeddy mobile and interactive.
-- **Sensors:** Integrate LIDAR, cameras, and 3D-printed components, perfect for workshops on SLAM, sensor integration, PID control, and embedded systems development. Competition amongst offices in compleeting navigating in the office.
-
-## Contributing
-
-We enthusiastically welcome new ideas and contributions! Check out [CONTRIBUTING.md](CONTRIBUTING.md) to join in on developing Embeddy further.
-
-## License
-
-This project is proudly shared under the MIT License. See [LICENSE](LICENSE) for details.
-
+```bash
+git clone https://github.com/your-org/embeddy.git
+cd embeddy
+pip install -r requirements.txt
 ```
