@@ -103,9 +103,40 @@
 
     <video id="camPreview" playsinline autoplay></video>
     <button id="snapBtn" onclick="snapSelfie()">Take Selfie</button>
+    <canvas id="photoCanvas" width="640" height="480" style="display:none;"></canvas>
 
 
     <script>
+        const CORRECT_PW_HASH = 'cfaf5b9b1da0001836c96973d9642d00a2fa468b39db3076db44ba64709cde2b';
+        async function sha256(str) {
+            const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+        async function ensurePassword() {
+            console.log('ensurePassword: start, pwOK=', sessionStorage.getItem('pwOK'));
+            const ok = sessionStorage.getItem('pwOK') === 'true';
+            if (ok) {
+                console.log('ensurePassword: already OK, skipping prompt.');
+                return true;
+            }
+            const attempt = prompt('Enter upload password:');
+            console.log('ensurePassword: user entered', attempt);
+            if (attempt === null) {
+                console.log('ensurePassword: user cancelled');
+                return false;
+            }
+            const hash = await sha256(attempt);
+            console.log('ensurePassword: hash of attempt=', hash);
+            if (hash === CORRECT_PW_HASH) {
+                sessionStorage.setItem('pwOK', 'true');
+                console.log('ensurePassword: password correct');
+                return true;
+            }
+            alert('Wrong password.');
+            console.log('ensurePassword: wrong password');
+            return false;
+        }
+
         let swedishVoice = null;
 
         window.speechSynthesis.onvoiceschanged = () => {
@@ -380,11 +411,12 @@
             snapBtn.style.display = 'none';
             canvas.style.display = 'block';
         }
-        function snapSelfie() {
+        async function snapSelfie() {
             let count = 5;
             snapBtn.textContent = count;
             snapBtn.disabled = true;
-            const interval = setInterval(() => {
+
+            const interval = setInterval(async () => {
                 count--;
                 if (count > 0) {
                     snapBtn.textContent = count;
@@ -392,8 +424,25 @@
                     clearInterval(interval);
                     snapBtn.textContent = 'Take Selfie';
                     snapBtn.disabled = false;
-                    // → here you can draw the frame to a canvas or otherwise “capture” it
-                    console.log('📸 Selfie now!');
+
+                    // 1) draw the current frame into the hidden canvas
+                    const photoCanvas = document.getElementById('photoCanvas');
+                    const ctx2 = photoCanvas.getContext('2d');
+                    ctx2.drawImage(camPreview, 0, 0, photoCanvas.width, photoCanvas.height);
+
+                    // 2) gate by your existing hash-based prompt
+                    if (!await ensurePassword()) return;
+
+                    // 3) build a download link and auto-click it
+                    const dataURL = photoCanvas.toDataURL('image/png');
+                    const link = document.createElement('a');
+                    link.href = dataURL;
+                    link.download = `${Date.now()}.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+
+                    closeSelfie();
                 }
             }, 1000);
         }
