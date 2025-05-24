@@ -54,6 +54,18 @@
             border-style: solid;
             border-color: transparent white transparent transparent;
         }
+
+        #camPreview {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 60vw;
+            height: 60vh;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+            z-index: 10;
+            display: none;
+        }
     </style>
 </head>
 
@@ -69,15 +81,19 @@
         <button onclick="setExpression('annoyed')">Annoyed</button>
         <button onclick="showDadJoke()">Dad Joke</button>
         <button onclick="togglePartyMode()">Party Mode</button>
+        <button onclick="startSelfie()">Selfie</button>
+
     </div>
     <div id="jokeBox" class="joke"></div>
+
+    <video id="camPreview" playsinline autoplay></video>
+
 
     <script>
         let swedishVoice = null;
 
         window.speechSynthesis.onvoiceschanged = () => {
             const voices = window.speechSynthesis.getVoices();
-            // pick the first Swedish (sv-SE) voice you find
             swedishVoice = voices.find(v => v.lang === 'sv-SE');
         };
         const canvas = document.getElementById("faceCanvas");
@@ -322,6 +338,36 @@
                     partyMode = false;
                 }
             }, 200);
+        }
+
+        const camPreview = document.getElementById('camPreview');
+        let mediaStream = null;
+
+        async function startSelfie() {
+            if (mediaStream) {
+                return closeSelfie();
+            }
+            if (!navigator.mediaDevices?.getUserMedia) {
+                alert('Camera not supported on this device.');
+                return;
+            }
+            try {
+                mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                camPreview.srcObject = mediaStream;
+                camPreview.style.display = 'block';
+            } catch (err) {
+                console.error(err);
+                alert('Could not access camera.');
+            }
+        }
+
+        function closeSelfie() {
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(t => t.stop());
+                mediaStream = null;
+            }
+            camPreview.style.display = 'none';
+            canvas.style.display = 'block';
         }
 
         function animate() {
