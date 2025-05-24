@@ -66,6 +66,21 @@
             z-index: 10;
             display: none;
         }
+
+        #snapBtn {
+            display: none;
+            position: absolute;
+            top: calc(50% + 30vh + 10px);
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 11;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.8);
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -87,6 +102,7 @@
     <div id="jokeBox" class="joke"></div>
 
     <video id="camPreview" playsinline autoplay></video>
+    <button id="snapBtn" onclick="snapSelfie()">Take Selfie</button>
 
 
     <script>
@@ -340,34 +356,46 @@
             }, 200);
         }
 
+        const snapBtn = document.getElementById('snapBtn');
         const camPreview = document.getElementById('camPreview');
         let mediaStream = null;
 
         async function startSelfie() {
-            if (mediaStream) {
-                return closeSelfie();
-            }
+            if (mediaStream) return closeSelfie();
             if (!navigator.mediaDevices?.getUserMedia) {
-                alert('Camera not supported on this device.');
+                alert('Camera not supported.');
                 return;
             }
-            try {
-                mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
-                camPreview.srcObject = mediaStream;
-                camPreview.style.display = 'block';
-            } catch (err) {
-                console.error(err);
-                alert('Could not access camera.');
-            }
+            mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            canvas.style.display = 'none';
+            camPreview.srcObject = mediaStream;
+            camPreview.style.display = 'block';
+            snapBtn.style.display = 'block';
         }
 
         function closeSelfie() {
-            if (mediaStream) {
-                mediaStream.getTracks().forEach(t => t.stop());
-                mediaStream = null;
-            }
+            mediaStream?.getTracks().forEach(t => t.stop());
+            mediaStream = null;
             camPreview.style.display = 'none';
+            snapBtn.style.display = 'none';
             canvas.style.display = 'block';
+        }
+        function snapSelfie() {
+            let count = 5;
+            snapBtn.textContent = count;
+            snapBtn.disabled = true;
+            const interval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    snapBtn.textContent = count;
+                } else {
+                    clearInterval(interval);
+                    snapBtn.textContent = 'Take Selfie';
+                    snapBtn.disabled = false;
+                    // → here you can draw the frame to a canvas or otherwise “capture” it
+                    console.log('📸 Selfie now!');
+                }
+            }, 1000);
         }
 
         function animate() {
