@@ -68,10 +68,18 @@
         <button onclick="setExpression('shy')">Shy</button>
         <button onclick="setExpression('annoyed')">Annoyed</button>
         <button onclick="showDadJoke()">Dad Joke</button>
+        <button onclick="togglePartyMode()">Party Mode</button>
     </div>
     <div id="jokeBox" class="joke"></div>
 
     <script>
+        let swedishVoice = null;
+
+        window.speechSynthesis.onvoiceschanged = () => {
+            const voices = window.speechSynthesis.getVoices();
+            // pick the first Swedish (sv-SE) voice you find
+            swedishVoice = voices.find(v => v.lang === 'sv-SE');
+        };
         const canvas = document.getElementById("faceCanvas");
         const ctx = canvas.getContext("2d");
         const jokeBox = document.getElementById("jokeBox");
@@ -92,20 +100,47 @@
             "Why don't eggs tell jokes? They'd crack each other up.",
             "What do you call a fish wearing a bowtie? Sofishticated.",
             "Why did the bicycle fall over? Because it was two-tired.",
-            "I would avoid the sushi if I was you. It’s a little fishy.",
+            "I would avoid the sushi if I was you. It's a little fishy.",
             "Why don't scientists trust atoms? Because they make up everything.",
             "Want to hear a joke about paper? Never mind, it's tearable.",
-            "I’m reading a book about teleportation. It’s bound to get me somewhere.",
+            "I'm reading a book about teleportation. It's bound to get me somewhere.",
             "I used to work in a shoe recycling shop. It was sole destroying.",
-            "I’m so good at sleeping, I can do it with my eyes closed.",
+            "I'm so good at sleeping, I can do it with my eyes closed.",
             "I only know 25 letters of the alphabet. I don't know y.",
             "When does a joke become a dad joke? When it becomes apparent.",
             "I made a pencil with two erasers. It was pointless.",
             "I used to be addicted to soap, but I'm clean now.",
             "Can February March? No, but April May!",
             "How does a penguin build its house? Igloos it together.",
-            "Why don't crabs give to charity? Because they’re shellfish.",
-            "What do you call a bear with no teeth? A gummy bear."
+            "Why don't crabs give to charity? Because they're shellfish.",
+            "What do you call a bear with no teeth? A gummy bear.",
+            "What did one wall say to the other? - Meet you at the corner!",
+            "How do you make a fish laugh? - You tickle its sole.",
+            "What does an electrician do at the bar? - He takes a current drink.",
+            "What did the carpenter say after cutting crookedly? - Saw that coming!",
+            "Why did the lemon go to therapy? - It had serious zest issues.",
+            "What did one shrimp say to the other? - Wanna come over and peel off a little?",
+            "Why is the police in the salad aisle? - Looking for unlawful lettuce.",
+            "How do you know a seal is in trouble? - It's skating on thin ice with a sea-cretive smile.",
+            "What's a sandwich doing in prison? - Serving time on a roll.",
+            "How do you know Gothenburgers love the ocean? - Their puns come in waves!",
+            "Why don't Swedes ever play hide and seek? Because good luck hiding when it's bright 24 hours a day in summer.",
+            "What's a Swede's emergency kit? Coffee, cinnamon buns, and a backup coffee.",
+            "How do you know a Swede is angry? They furrow their brow slightly and say, “That's not optimal.”",
+            "What do Swedes call someone who talks a lot? Norwegian.",
+            "Why did the Swede bring a ladder to IKEA? He heard the prices were going through the roof.",
+            "What's a Swede's idea of a wild Friday night? One too many cups of herbal tea and assembling a bookshelf without the instructions.",
+            "Why did the Swedish man stare at the orange juice carton? It said “concentrate.”",
+            "Why don't Swedes ever get lost in the forest? Because there's probably an IKEA in there somewhere.",
+            "How do Swedes survive the winter? By entering a state of hibernation interrupted only by fika.",
+            "What did the tourist say when asked how to blend in with Swedes? “Easy. Don't make eye contact. Ever.”",
+            "When does a joke become a dad joke? When the punchline becomes a parent.",
+            "How did the barber win the race? He knew a shortcut.",
+            "Why did the whale blush? It saw the ocean's bottom.",
+            "I adopted a dog from a blacksmith. As soon as I brought him home, he made a bolt for the door.",
+            "What do you call a shoe made out of a banana? A slipper.",
+            "I read a book about glue once. I couldn't put it down.",
+            "Where do penguins vote? At the North Poll."
         ];
         let expression = "neutral";
         let eyeOffset = 0;
@@ -246,8 +281,10 @@
             isCrying = Math.random() < 0.3;
             isLaughing = true;
             drawFace();
-            if ('speechSynthesis' in window) {
+            if ('speechSynthesis' in window && swedishVoice) {
                 const utt = new SpeechSynthesisUtterance(joke);
+                utt.lang = 'sv-SE';
+                utt.voice = swedishVoice;
                 window.speechSynthesis.speak(utt);
             }
             jokeTimeout = setTimeout(() => {
@@ -257,6 +294,34 @@
                 expression = 'neutral';
                 drawFace();
             }, 10000);
+        }
+        let partyMode = false;
+        let partyInterval;
+        const partyColors = ['#FF0080', '#00FF80', '#80FF00', '#0080FF', '#FF8000', '#8000FF'];
+        let partyColorIndex = 0;
+        const CYCLES = 5;
+
+        function togglePartyMode() {
+            if (partyMode) {
+                clearInterval(partyInterval);
+                canvas.style.backgroundColor = 'black';
+                partyMode = false;
+                return;
+            }
+
+            partyMode = true;
+            partyColorIndex = 0;
+            clearInterval(partyInterval); // just in case
+            partyInterval = setInterval(() => {
+                canvas.style.backgroundColor = partyColors[partyColorIndex % partyColors.length];
+                partyColorIndex++;
+
+                if (partyColorIndex >= partyColors.length * CYCLES) {
+                    clearInterval(partyInterval);
+                    canvas.style.backgroundColor = 'black';
+                    partyMode = false;
+                }
+            }, 200);
         }
 
         function animate() {
