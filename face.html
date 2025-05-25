@@ -82,6 +82,7 @@
             cursor: pointer;
         }
     </style>
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 </head>
 
 <body>
@@ -97,16 +98,15 @@
         <button onclick="showDadJoke()">Dad Joke</button>
         <button onclick="togglePartyMode()">Party Mode</button>
         <button onclick="startSelfie()">Selfie</button>
-
+        <button id="mimicBtn">Mimic Mode</button>
     </div>
-    <div id="jokeBox" class="joke"></div>
 
+    <div id="jokeBox" class="joke"></div>
     <video id="camPreview" playsinline autoplay></video>
     <button id="snapBtn" onclick="snapSelfie()">Take Selfie</button>
     <canvas id="photoCanvas" width="640" height="480" style="display:none;"></canvas>
 
-
-    <script>
+    <script defer>
         const CORRECT_PW_HASH = 'cfaf5b9b1da0001836c96973d9642d00a2fa468b39db3076db44ba64709cde2b';
         async function sha256(str) {
             const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
@@ -263,7 +263,6 @@
                 ctx.moveTo(cx + xOff, browY - 30);
                 ctx.lineTo(cx + xOff + fw * 0.12, browY - 20);
             } else {
-                // existing expressions
                 if (expression === "sad") {
                     ctx.moveTo(cx - xOff, browY + 10);
                     ctx.lineTo(cx - xOff + fw * 0.12, browY - 10);
@@ -339,7 +338,6 @@
             const joke = dadJokes[Math.floor(Math.random() * dadJokes.length)];
             jokeBox.textContent = joke;
             jokeBox.style.display = 'block';
-            // choose crying-of-joy occasionally
             isCrying = Math.random() < 0.3;
             isLaughing = true;
             drawFace();
@@ -357,6 +355,7 @@
                 drawFace();
             }, 10000);
         }
+
         let partyMode = false;
         let partyInterval;
         const partyColors = ['#FF0080', '#00FF80', '#80FF00', '#0080FF', '#FF8000', '#8000FF'];
@@ -373,7 +372,7 @@
 
             partyMode = true;
             partyColorIndex = 0;
-            clearInterval(partyInterval); // just in case
+            clearInterval(partyInterval);
             partyInterval = setInterval(() => {
                 canvas.style.backgroundColor = partyColors[partyColorIndex % partyColors.length];
                 partyColorIndex++;
@@ -396,11 +395,16 @@
                 alert('Camera not supported.');
                 return;
             }
-            mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
-            canvas.style.display = 'none';
-            camPreview.srcObject = mediaStream;
-            camPreview.style.display = 'block';
-            snapBtn.style.display = 'block';
+            try {
+                mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                canvas.style.display = 'none';
+                camPreview.srcObject = mediaStream;
+                camPreview.style.display = 'block';
+                snapBtn.style.display = 'block';
+            } catch (err) {
+                console.error('Selfie webcam error:', err);
+                alert('Failed to access webcam. Check console for details.');
+            }
         }
 
         function closeSelfie() {
@@ -410,6 +414,7 @@
             snapBtn.style.display = 'none';
             canvas.style.display = 'block';
         }
+
         async function snapSelfie() {
             let count = 5;
             snapBtn.textContent = count;
@@ -424,15 +429,12 @@
                     snapBtn.textContent = 'Take Selfie';
                     snapBtn.disabled = false;
 
-                    // 1) draw the current frame into the hidden canvas
                     const photoCanvas = document.getElementById('photoCanvas');
                     const ctx2 = photoCanvas.getContext('2d');
                     ctx2.drawImage(camPreview, 0, 0, photoCanvas.width, photoCanvas.height);
 
-                    // 2) gate by your existing hash-based prompt
                     if (!await ensurePassword()) return;
 
-                    // 3) build a download link and auto-click it
                     const dataURL = photoCanvas.toDataURL('image/png');
                     const link = document.createElement('a');
                     link.href = dataURL;
@@ -452,10 +454,113 @@
             eyeOffset = Math.sin(Date.now() / speed) * amp;
             browOffset = eyeOffset;
             mouthOffset = eyeOffset;
-            if (Math.random() < 0.002) blink = true;
+            if (!mimicActive && Math.random() < 0.002) blink = true;
             setTimeout(() => (blink = false), isLaughing ? 100 : 200);
             drawFace();
             requestAnimationFrame(animate);
+        }
+
+        async function loadModels() {
+            const BASE =
+                'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js-models@master';
+
+            await faceapi.nets.tinyFaceDetector
+                .loadFromUri(`${BASE}/tiny_face_detector`);
+
+            await faceapi.nets.faceExpressionNet
+                .loadFromUri(`${BASE}/face_expression`);
+
+            await faceapi.nets.faceLandmark68TinyNet
+                .loadFromUri(`${BASE}/face_landmark_68_tiny`);
+        }
+
+        let mimicActive = false;
+        let mimicStream = null;
+        let mimicInterval = null;
+
+        const mimicBtn = document.getElementById('mimicBtn');
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        mimicBtn.addEventListener('click', async () => {
+            if (mimicInterval) {
+                // === STOP ===
+                clearInterval(mimicInterval);
+                mimicInterval = null;
+                mimicStream.getTracks().forEach(t => t.stop());
+                mimicStream = null;
+                expression = 'neutral';
+                isLaughing = isCrying = blink = false;
+                mimicBtn.textContent = 'Start Mimic Mode';
+                return;
+            }
+
+            // === START ===
+            await loadModels();
+            mimicStream = await navigator.mediaDevices.getUserMedia({ video: {} });
+            const videoEl = document.createElement('video');
+            videoEl.srcObject = mimicStream;
+            videoEl.muted = true;               // for autoplay
+            await videoEl.play();
+
+            mimicBtn.textContent = 'Stop Mimic Mode';
+
+            mimicInterval = setInterval(async () => {
+                const samples = [];
+                let lastDet = null;
+
+                // 5 rapid detections
+                for (let i = 0; i < 5; i++) {
+                    try {
+                        const det = await faceapi
+                            .detectSingleFace(videoEl, new faceapi.TinyFaceDetectorOptions())
+                            .withFaceLandmarks(true)
+                            .withFaceExpressions();
+                        if (det) {
+                            lastDet = det;
+                            const [label] = Object.entries(det.expressions)
+                                .filter(([k]) => ['neutral', 'happy', 'sad', 'angry', 'surprised'].includes(k))
+                                .sort((a, b) => b[1] - a[1])[0];
+                            samples.push(label);
+                        }
+                    } catch (_) {
+                        // ignore detection errors
+                    }
+                }
+
+                const counts = samples.reduce((acc, l) => {
+                    acc[l] = (acc[l] || 0) + 1;
+                    return acc;
+                }, {});
+                const best = Object.keys(counts)
+                    .sort((a, b) => counts[b] - counts[a])[0]
+                    || 'neutral';
+
+                expression = best;
+                isLaughing = best === 'happy';
+                isCrying = false;
+                if (lastDet) {
+                    const leftEye = lastDet.landmarks.getLeftEye();
+                    const rightEye = lastDet.landmarks.getRightEye();
+                    const openness = pts =>
+                        ((pts[1].y - pts[5].y) + (pts[2].y - pts[4].y)) /
+                        (pts[0].x - pts[3].x);
+
+                    blink = openness(leftEye) < 0.4 || openness(rightEye) < 0.4;
+                } else {
+                    blink = false;
+                }
+            }, 500);
+        });
+
+        function stopMimic() {
+            mimicActive = false;
+            mimicStream.getTracks().forEach(t => t.stop());
+            mimicStream = null;
+            expression = 'neutral';
+            isLaughing = isCrying = blink = false;
+            mimicBtn.textContent = 'Start Mimic Mode';
         }
 
         window.addEventListener("resize", resizeCanvas);
