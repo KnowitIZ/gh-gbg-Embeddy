@@ -566,6 +566,18 @@
         window.addEventListener("resize", resizeCanvas);
         resizeCanvas();
         animate();
+
+        (function scheduleNightlyReload(targetHour = 3) {
+            const now = new Date();
+            const next = new Date(now);
+            next.setHours(targetHour, 0, 0, 0);
+            if (next <= now) next.setDate(next.getDate() + 1);
+            const msUntilReload = next - now;
+            console.log(`Next reload at ${next.toLocaleString()}`);
+            setTimeout(() => {
+                window.location.href = window.location.pathname + '?_=' + Date.now();
+            }, msUntilReload);
+        })();
     </script>
 </body>
 
