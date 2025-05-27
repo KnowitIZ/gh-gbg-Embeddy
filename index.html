@@ -99,9 +99,11 @@
         <button onclick="togglePartyMode()">Party Mode</button>
         <button onclick="startSelfie()">Selfie</button>
         <button id="mimicBtn">Mimic Mode</button>
+        <button onclick="showDailyRiddle()">Daily Riddle</button>
     </div>
 
     <div id="jokeBox" class="joke"></div>
+    <div id="riddleBox" class="joke" style="top: 30%;"></div>
     <video id="camPreview" playsinline autoplay></video>
     <button id="snapBtn" onclick="snapSelfie()">Take Selfie</button>
     <canvas id="photoCanvas" width="640" height="480" style="display:none;"></canvas>
@@ -566,6 +568,91 @@
         window.addEventListener("resize", resizeCanvas);
         resizeCanvas();
         animate();
+
+        const riddles = [
+            { question: "What has keys but can’t open locks?", answer: "A piano." },
+            { question: "What has to be broken before you can use it?", answer: "An egg." },
+            { question: "I’m tall when I’m young, and I’m short when I’m old. What am I?", answer: "A candle." },
+            { question: "What month of the year has 28 days?", answer: "All of them." },
+            { question: "What 8-letter word can have a letter taken away and still make a word, keep doing that until one letter is left?", answer: "Starting → Staring → String → Sting → Sing → Sin → In → I." },
+            { question: "What can’t talk but will reply when spoken to?", answer: "An echo." },
+            { question: "The more you take, the more you leave behind. What am I?", answer: "Footsteps." },
+            { question: "What has a head, a tail, is brown, and has no legs?", answer: "A penny." },
+            { question: "What gets wetter the more it dries?", answer: "A towel." },
+            { question: "What can run but never walks, has a bed but never sleeps?", answer: "A river." },
+            { question: "What goes up but never comes down?", answer: "Your age." },
+            { question: "What can fill a room but takes up no space?", answer: "Light." },
+            { question: "I have branches, but no fruit, trunk or leaves. What am I?", answer: "A bank." },
+            { question: "I turn polar bears white and I will make you cry. I make guys have to pee and girls comb their hair. I make celebrities look stupid and normal people look like celebrities. I turn pancakes brown and make your champagne bubble. If you squeeze me, I’ll pop. If you look at me, you’ll pop. Can you guess what I am?", answer: "No one knows the answer—it’s designed to confuse you." },
+            { question: "What can't be put in a saucepan?", answer: "Its lid." },
+            { question: "What has one eye but can’t see?", answer: "A needle." },
+            { question: "What gets bigger the more you take away?", answer: "A hole." },
+            { question: "What begins with T, ends with T, and has T in it?", answer: "A teapot." },
+            { question: "Where does today come before yesterday?", answer: "In a dictionary." },
+            { question: "What is always in front of you but can’t be seen?", answer: "The future." },
+            { question: "What has a heart that doesn’t beat?", answer: "An artichoke." },
+            { question: "I speak without a mouth and hear without ears. What am I?", answer: "An echo." },
+            { question: "You see me once in June, twice in November, but not at all in May. What am I?", answer: "The letter 'e'." },
+            { question: "The more of me you take, the more you leave behind. What am I?", answer: "Footsteps." },
+            { question: "What has four wheels and flies?", answer: "A garbage truck." },
+            { question: "What has hands but can’t clap?", answer: "A clock." },
+            { question: "What comes once in a minute, twice in a moment, but never in a thousand years?", answer: "The letter 'M'." },
+            { question: "What can travel around the world while staying in the same corner?", answer: "A stamp." },
+            { question: "What invention lets you look right through a wall?", answer: "A window." },
+            { question: "What has many teeth but can’t bite?", answer: "A comb." },
+            { question: "If you have me, you want to share me. If you share me, you don’t have me. What am I?", answer: "A secret." },
+            { question: "What goes through cities and fields but never moves?", answer: "A road." },
+            { question: "What’s black when you buy it, red when you use it, and gray when you throw it away?", answer: "Charcoal." },
+            { question: "What has 13 hearts but no other organs?", answer: "A deck of cards." },
+            { question: "What has legs but doesn’t walk?", answer: "A table." },
+            { question: "If two’s company, and three’s a crowd, what are four and five?", answer: "Nine." },
+            { question: "What comes down but never goes up?", answer: "Rain." },
+            { question: "How many letters are in the alphabet?", answer: "There are 11 letters in 'the alphabet'." },
+            { question: "Forward I am heavy, but backward I am not. What am I?", answer: "The word 'ton'." },
+            { question: "What building has the most stories?", answer: "The library." },
+            { question: "I’m light as a feather, yet the strongest man can’t hold me. What am I?", answer: "Your breath." },
+            { question: "What can you catch but not throw?", answer: "A cold." },
+            { question: "What has an endless supply of letters but starts empty?", answer: "A mailbox." },
+            { question: "The more you have of me, the less you see. What am I?", answer: "Darkness." },
+            { question: "What five-letter word becomes shorter when you add two letters to it?", answer: "Short." },
+            { question: "What can’t be seen, can’t be felt, can’t be heard, and can’t be smelt?", answer: "Silence." },
+            { question: "What has cities but no houses, rivers but no water, forests but no trees?", answer: "A map." },
+            { question: "What can you hold without touching it?", answer: "A conversation." },
+            { question: "What word is spelled incorrectly in every dictionary?", answer: "Incorrectly." },
+            { question: "I go in hard, come out soft, and am never the same. What am I?", answer: "Chewing gum." },
+            { question: "The more you remove from me, the bigger I get. What am I?", answer: "A hole." },
+            { question: "What disappears as soon as you say its name?", answer: "Silence." },
+            { question: "What can be cracked, made, told, and played?", answer: "A joke." },
+            { question: "I’m found in socks, scarves and mittens; and often in the paws of playful kittens. What am I?", answer: "Yarn." },
+            { question: "What 5-digit number has the following pattern: The first digit is 1/3 of the third digit, the second digit is double the first, the third digit is three times the first, the fourth digit is the second digit, and the fifth digit is the sum of the first and third?", answer: "Answer: 12342." },
+            { question: "I shave every day, but my beard stays the same. What am I?", answer: "A barber." },
+            { question: "What flies without wings?", answer: "Time." },
+            { question: "What word begins and ends with an E but only has one letter?", answer: "Envelope." },
+            { question: "I have lakes but no water, mountains but no stone, and cities with no buildings. What am I?", answer: "A map." },
+            { question: "What begins with an E and only contains one letter?", answer: "An envelope." },
+            { question: "What is so fragile that saying its name breaks it?", answer: "Silence." },
+            { question: "What tastes better than it smells?", answer: "A tongue." },
+            { question: "Who is bigger, Mr. Bigger, Mrs. Bigger, or their baby?", answer: "The baby—he’s a little Bigger." },
+            { question: "What has one head, one foot, and four legs?", answer: "A bed." },
+            { question: "What belongs to you, but other people use it more than you do?", answer: "Your name." }
+        ];
+
+
+        function showDailyRiddle() {
+            const riddleBox = document.getElementById("riddleBox");
+            const day = new Date();
+            const todayIndex = day.getDate() % riddles.length;
+            const yesterdayIndex = (todayIndex - 1 + riddles.length) % riddles.length;
+
+            const today = riddles[todayIndex];
+            const yesterday = riddles[yesterdayIndex];
+
+            riddleBox.innerHTML = `<strong>Today's Riddle:</strong><br>${today.question}<br><br><em>Yesterday's Answer:</em><br>${yesterday.answer}`;
+            riddleBox.style.display = 'block';
+
+            // Optional: Hide after some time
+            setTimeout(() => riddleBox.style.display = 'none', 15000);
+        }
 
         (function scheduleNightlyReload(targetHour = 3) {
             const now = new Date();
