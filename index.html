@@ -2,6 +2,19 @@
 <html lang="en">
 
 <head>
+    <script>
+        window.onerror = function (msg, src, line, col, err) {
+            document.body.innerHTML =
+                '<pre style="color:#f88; background:#000; padding:1em; white-space:pre-wrap">' +
+                '❌ JS ERROR:\n' + msg +
+                '\n at ' + src + ':' + line + ':' + col +
+                '\n' + (err && err.stack ? err.stack : '') +
+                '</pre>';
+            return true; // prevent the browser console error as well
+        };
+        // sanity check that our debugger is running:
+        console.log("🐞 debugger hook installed");
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
     <title>Simple Face with Dad Joke</title>
@@ -138,26 +151,7 @@
     <canvas id="photoCanvas" width="640" height="480" style="display:none;"></canvas>
 
     <script defer>
-        const CORRECT_PW_HASH = 'cfaf5b9b1da0001836c96973d9642d00a2fa468b39db3076db44ba64709cde2b';
-        async function sha256sum(str) {
-            if (window.crypto && window.crypto.subtle) {
-                const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-                return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-            }
-            return sha256(str);
-        }
-        async function ensurePassword() {
-            if (sessionStorage.getItem('pwOK') === 'true') return true;
-            var attempt = prompt('Enter upload password:');
-            if (attempt === null) return false;
-            var hash = await sha256sum(attempt);
-            if (hash === CORRECT_PW_HASH) {
-                sessionStorage.setItem('pwOK', 'true');
-                return true;
-            }
-            alert('Wrong password.');
-            return false;
-        }
+
         var swedishVoice = null;
         if ('speechSynthesis' in window) {
             const pickVoice = () => {
@@ -410,68 +404,66 @@
             }, 200);
         }
 
-        const snapBtn = document.getElementById('snapBtn');
-        const camPreview = document.getElementById('camPreview');
-        let mediaStream = null;
+        // const snapBtn = document.getElementById('snapBtn');
+        // const camPreview = document.getElementById('camPreview');
+        // let mediaStream = null;
 
-        async function startSelfie() {
-            if (mediaStream) return closeSelfie();
-            if (!navigator.mediaDevices?.getUserMedia) {
-                alert('Camera not supported.');
-                return;
-            }
-            try {
-                mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
-                canvas.style.display = 'none';
-                camPreview.srcObject = mediaStream;
-                camPreview.style.display = 'block';
-                snapBtn.style.display = 'block';
-            } catch (err) {
-                console.error('Selfie webcam error:', err);
-                alert('Failed to access webcam. Check console for details.');
-            }
-        }
+        // async function startSelfie() {
+        //     if (mediaStream) return closeSelfie();
+        //     if (!navigator.mediaDevices?.getUserMedia) {
+        //         alert('Camera not supported.');
+        //         return;
+        //     }
+        //     try {
+        //         mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        //         canvas.style.display = 'none';
+        //         camPreview.srcObject = mediaStream;
+        //         camPreview.style.display = 'block';
+        //         snapBtn.style.display = 'block';
+        //     } catch (err) {
+        //         console.error('Selfie webcam error:', err);
+        //         alert('Failed to access webcam. Check console for details.');
+        //     }
+        // }
 
-        function closeSelfie() {
-            mediaStream?.getTracks().forEach(t => t.stop());
-            mediaStream = null;
-            camPreview.style.display = 'none';
-            snapBtn.style.display = 'none';
-            canvas.style.display = 'block';
-        }
+        // function closeSelfie() {
+        //     mediaStream?.getTracks().forEach(t => t.stop());
+        //     mediaStream = null;
+        //     camPreview.style.display = 'none';
+        //     snapBtn.style.display = 'none';
+        //     canvas.style.display = 'block';
+        // }
 
-        async function snapSelfie() {
-            let count = 5;
-            snapBtn.textContent = count;
-            snapBtn.disabled = true;
+        // async function snapSelfie() {
+        //     let count = 5;
+        //     snapBtn.textContent = count;
+        //     snapBtn.disabled = true;
 
-            const interval = setInterval(async () => {
-                count--;
-                if (count > 0) {
-                    snapBtn.textContent = count;
-                } else {
-                    clearInterval(interval);
-                    snapBtn.textContent = 'Take Selfie';
-                    snapBtn.disabled = false;
+        //     const interval = setInterval(async () => {
+        //         count--;
+        //         if (count > 0) {
+        //             snapBtn.textContent = count;
+        //         } else {
+        //             clearInterval(interval);
+        //             snapBtn.textContent = 'Take Selfie';
+        //             snapBtn.disabled = false;
 
-                    const photoCanvas = document.getElementById('photoCanvas');
-                    const ctx2 = photoCanvas.getContext('2d');
-                    ctx2.drawImage(camPreview, 0, 0, photoCanvas.width, photoCanvas.height);
+        //             const photoCanvas = document.getElementById('photoCanvas');
+        //             const ctx2 = photoCanvas.getContext('2d');
+        //             ctx2.drawImage(camPreview, 0, 0, photoCanvas.width, photoCanvas.height);
 
-                    if (!await ensurePassword()) return;
+        //             const dataURL = photoCanvas.toDataURL('image/png');
+        //             const link = document.createElement('a');
+        //             link.href = dataURL;
+        //             link.download = `${Date.now()}.png`;
+        //             document.body.appendChild(link);
+        //             link.click();
+        //             link.remove();
 
-                    const dataURL = photoCanvas.toDataURL('image/png');
-                    const link = document.createElement('a');
-                    link.href = dataURL;
-                    link.download = `${Date.now()}.png`;
-                    document.body.appendChild(link);
-                    link.click();
-                    link.remove();
-
-                    closeSelfie();
-                }
-            }, 1000);
-        }
+        //             closeSelfie();
+        //         }
+        //     }, 1000);
+        // }
 
         function animate() {
             const speed = isLaughing ? 200 : 500;
@@ -485,108 +477,103 @@
             requestAnimationFrame(animate);
         }
 
-        async function loadModels() {
-            const BASE =
-                'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js-models@master';
+        // async function loadModels() {
+        //     const BASE =
+        //         'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js-models@master';
 
-            await faceapi.nets.tinyFaceDetector
-                .loadFromUri(`${BASE}/tiny_face_detector`);
+        //     await faceapi.nets.tinyFaceDetector
+        //         .loadFromUri(`${BASE}/tiny_face_detector`);
 
-            await faceapi.nets.faceExpressionNet
-                .loadFromUri(`${BASE}/face_expression`);
+        //     await faceapi.nets.faceExpressionNet
+        //         .loadFromUri(`${BASE}/face_expression`);
 
-            await faceapi.nets.faceLandmark68TinyNet
-                .loadFromUri(`${BASE}/face_landmark_68_tiny`);
-        }
+        //     await faceapi.nets.faceLandmark68TinyNet
+        //         .loadFromUri(`${BASE}/face_landmark_68_tiny`);
+        // }
 
-        let mimicActive = false;
-        let mimicStream = null;
-        let mimicInterval = null;
+        // let mimicActive = false;
+        // let mimicStream = null;
+        // let mimicInterval = null;
 
-        const mimicBtn = document.getElementById('mimicBtn');
-        function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
+        // const mimicBtn = document.getElementById('mimicBtn');
+        // mimicBtn.addEventListener('click', async () => {
+        //     if (mimicInterval) {
+        //         clearInterval(mimicInterval);
+        //         mimicInterval = null;
+        //         mimicStream.getTracks().forEach(t => t.stop());
+        //         mimicStream = null;
+        //         expression = 'neutral';
+        //         isLaughing = isCrying = blink = false;
+        //         mimicBtn.textContent = 'Start Mimic Mode';
+        //         return;
+        //     }
 
-        mimicBtn.addEventListener('click', async () => {
-            if (mimicInterval) {
-                // === STOP ===
-                clearInterval(mimicInterval);
-                mimicInterval = null;
-                mimicStream.getTracks().forEach(t => t.stop());
-                mimicStream = null;
-                expression = 'neutral';
-                isLaughing = isCrying = blink = false;
-                mimicBtn.textContent = 'Start Mimic Mode';
-                return;
-            }
+        //     // === START ===
+        //     await loadModels();
+        //     mimicStream = await navigator.mediaDevices.getUserMedia({ video: {} });
+        //     const videoEl = document.createElement('video');
+        //     videoEl.srcObject = mimicStream;
+        //     videoEl.muted = true;               // for autoplay
+        //     await videoEl.play();
 
-            // === START ===
-            await loadModels();
-            mimicStream = await navigator.mediaDevices.getUserMedia({ video: {} });
-            const videoEl = document.createElement('video');
-            videoEl.srcObject = mimicStream;
-            videoEl.muted = true;               // for autoplay
-            await videoEl.play();
+        //     mimicBtn.textContent = 'Stop Mimic Mode';
 
-            mimicBtn.textContent = 'Stop Mimic Mode';
+        //     mimicInterval = setInterval(async () => {
+        //         const samples = [];
+        //         let lastDet = null;
 
-            mimicInterval = setInterval(async () => {
-                const samples = [];
-                let lastDet = null;
+        //         // 5 rapid detections
+        //         for (let i = 0; i < 5; i++) {
+        //             try {
+        //                 const det = await faceapi
+        //                     .detectSingleFace(videoEl, new faceapi.TinyFaceDetectorOptions())
+        //                     .withFaceLandmarks(true)
+        //                     .withFaceExpressions();
+        //                 if (det) {
+        //                     lastDet = det;
+        //                     const [label] = Object.entries(det.expressions)
+        //                         .filter(([k]) => ['neutral', 'happy', 'sad', 'angry', 'surprised'].includes(k))
+        //                         .sort((a, b) => b[1] - a[1])[0];
+        //                     samples.push(label);
+        //                 }
+        //             } catch (_) {
+        //                 // ignore detection errors
+        //             }
+        //         }
 
-                // 5 rapid detections
-                for (let i = 0; i < 5; i++) {
-                    try {
-                        const det = await faceapi
-                            .detectSingleFace(videoEl, new faceapi.TinyFaceDetectorOptions())
-                            .withFaceLandmarks(true)
-                            .withFaceExpressions();
-                        if (det) {
-                            lastDet = det;
-                            const [label] = Object.entries(det.expressions)
-                                .filter(([k]) => ['neutral', 'happy', 'sad', 'angry', 'surprised'].includes(k))
-                                .sort((a, b) => b[1] - a[1])[0];
-                            samples.push(label);
-                        }
-                    } catch (_) {
-                        // ignore detection errors
-                    }
-                }
+        //         const counts = samples.reduce((acc, l) => {
+        //             acc[l] = (acc[l] || 0) + 1;
+        //             return acc;
+        //         }, {});
+        //         const best = Object.keys(counts)
+        //             .sort((a, b) => counts[b] - counts[a])[0]
+        //             || 'neutral';
 
-                const counts = samples.reduce((acc, l) => {
-                    acc[l] = (acc[l] || 0) + 1;
-                    return acc;
-                }, {});
-                const best = Object.keys(counts)
-                    .sort((a, b) => counts[b] - counts[a])[0]
-                    || 'neutral';
+        //         expression = best;
+        //         isLaughing = best === 'happy';
+        //         isCrying = false;
+        //         if (lastDet) {
+        //             const leftEye = lastDet.landmarks.getLeftEye();
+        //             const rightEye = lastDet.landmarks.getRightEye();
+        //             const openness = pts =>
+        //                 ((pts[1].y - pts[5].y) + (pts[2].y - pts[4].y)) /
+        //                 (pts[0].x - pts[3].x);
 
-                expression = best;
-                isLaughing = best === 'happy';
-                isCrying = false;
-                if (lastDet) {
-                    const leftEye = lastDet.landmarks.getLeftEye();
-                    const rightEye = lastDet.landmarks.getRightEye();
-                    const openness = pts =>
-                        ((pts[1].y - pts[5].y) + (pts[2].y - pts[4].y)) /
-                        (pts[0].x - pts[3].x);
+        //             blink = openness(leftEye) < 0.4 || openness(rightEye) < 0.4;
+        //         } else {
+        //             blink = false;
+        //         }
+        //     }, 500);
+        // });
 
-                    blink = openness(leftEye) < 0.4 || openness(rightEye) < 0.4;
-                } else {
-                    blink = false;
-                }
-            }, 500);
-        });
-
-        function stopMimic() {
-            mimicActive = false;
-            mimicStream.getTracks().forEach(t => t.stop());
-            mimicStream = null;
-            expression = 'neutral';
-            isLaughing = isCrying = blink = false;
-            mimicBtn.textContent = 'Start Mimic Mode';
-        }
+        // function stopMimic() {
+        //     mimicActive = false;
+        //     mimicStream.getTracks().forEach(t => t.stop());
+        //     mimicStream = null;
+        //     expression = 'neutral';
+        //     isLaughing = isCrying = blink = false;
+        //     mimicBtn.textContent = 'Start Mimic Mode';
+        // }
 
         window.addEventListener("resize", resizeCanvas);
         resizeCanvas();
