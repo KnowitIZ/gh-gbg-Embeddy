@@ -562,7 +562,10 @@
                                     .detectSingleFace(videoEl, new faceapi.TinyFaceDetectorOptions())
                                     .withFaceLandmarks(true)
                                     .withFaceExpressions()
-                                    .catch(function () { return null; }) // ignore errors
+                                    .then(
+                                        function (result) { return result; },    // on success
+                                        function () { return null; }       // on failure
+                                    )
                             );
                         }
 
