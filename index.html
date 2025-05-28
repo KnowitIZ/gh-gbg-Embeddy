@@ -471,7 +471,7 @@
             eyeOffset = Math.sin(Date.now() / speed) * amp;
             browOffset = eyeOffset;
             mouthOffset = eyeOffset;
-            if (!mimicActive && Math.random() < 0.002) blink = true;
+            if (Math.random() < 0.002) blink = true;
             setTimeout(() => (blink = false), isLaughing ? 100 : 200);
             drawFace();
             requestAnimationFrame(animate);
